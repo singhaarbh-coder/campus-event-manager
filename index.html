@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="eventApp">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parul University — Event Management System</title>
+
+    <!-- AngularJS CDN (only Angular core — no router) -->
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+
+    <style>
+        :root {
+            /* Parul University — soft maroon & gold */
+            --brand: #a83a56;
+            --brand-dark: #8c2c45;
+            --brand-soft: #fbecf0;
+            --gold: #cba43a;
+            --gold-soft: #f8f1da;
+            --bg: #f6f4f2;
+            --card: #ffffff;
+            --text: #241419;
+            --muted: #74696c;
+            --border: #ece4e6;
+            --green: #16a34a;
+            --green-soft: #dcfce7;
+            --amber: #d97706;
+            --amber-soft: #fef3c7;
+            --red: #dc2626;
+            --red-soft: #fee2e2;
+            --shadow: 0 6px 24px rgba(60, 15, 25, .07);
+            --sidebar: 250px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.5;
+        }
+
+        a { text-decoration: none; color: inherit; }
+
+        /* ---------------- Sidebar ---------------- */
+        .sidebar {
+            position: fixed;
+            top: 0; left: 0; bottom: 0;
+            width: var(--sidebar);
+            background: linear-gradient(170deg, #8a2c45, #a83a56 55%, #c05a76);
+            color: #fbeaef;
+            padding: 24px 16px;
+            display: flex;
+            flex-direction: column;
+            z-index: 40;
+            transition: transform .25s ease;
+        }
+
+        .side-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0 8px 22px;
+            border-bottom: 1px solid rgba(255, 255, 255, .12);
+            margin-bottom: 18px;
+        }
+
+        .side-brand .logo {
+            width: 42px; height: 42px;
+            border-radius: 11px;
+            background: rgba(255, 255, 255, .16);
+            display: grid; place-items: center;
+            font-size: 22px;
+        }
+
+        .side-brand h1 { font-size: 15px; font-weight: 700; color: #fff; }
+        .side-brand p { font-size: 11px; opacity: .7; }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 11px 14px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #e7c9d1;
+            cursor: pointer;
+            margin-bottom: 4px;
+            transition: background .15s, color .15s;
+        }
+
+        .nav-item .ico { font-size: 17px; width: 22px; text-align: center; }
+
+        .nav-item:hover { background: rgba(255, 255, 255, .08); color: #fff; }
+
+        .nav-item.active {
+            background: rgba(255, 255, 255, .14);
+            color: #fff;
+            box-shadow: inset 3px 0 0 var(--gold);
+        }
+
+        .nav-badge {
+            margin-left: auto;
+            background: rgba(255, 255, 255, .2);
+            font-size: 11px;
+            padding: 1px 8px;
+            border-radius: 999px;
+            font-weight: 700;
+        }
+
+        .side-foot {
+            margin-top: auto;
+            font-size: 11px;
+            opacity: .6;
+            padding: 12px 8px 0;
+            border-top: 1px solid rgba(255, 255, 255, .12);
+        }
+
+        .reset-link {
+            display: inline-block;
+            margin-top: 8px;
+            color: #f3d5dd;
+            font-weight: 600;
+            border-bottom: 1px dotted rgba(255, 255, 255, .5);
+            cursor: pointer;
+        }
+        .reset-link:hover { color: #fff; }
+
+        /* mobile-only nav controls — hidden on desktop */
+        .side-close, .hamburger { display: none; }
+        .nav-backdrop { display: none; }
+        .btn-short { display: none; }
+
+        /* ---------------- Main ---------------- */
+        .main {
+            margin-left: var(--sidebar);
+            min-height: 100vh;
+        }
+
+        .topbar {
+            background: var(--card);
+            border-bottom: 1px solid var(--border);
+            padding: 18px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .topbar h2 { font-size: 20px; }
+        .topbar .crumb { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+        .topbar-left { display: flex; align-items: center; gap: 14px; }
+        .hamburger {
+            background: var(--brand-soft); color: var(--brand-dark);
+            border: none; border-radius: 10px; width: 42px; height: 42px;
+            font-size: 20px; cursor: pointer; flex-shrink: 0;
+        }
+        .hamburger:hover { background: #e0e7ff; }
+
+        .btn {
+            cursor: pointer;
+            border: none;
+            border-radius: 10px;
+            font-family: inherit;
+            font-weight: 600;
+            font-size: 14px;
+            padding: 10px 18px;
+            transition: transform .06s, background .15s, opacity .15s;
+        }
+        .btn:active { transform: translateY(1px); }
+        .btn-primary { background: var(--brand); color: #fff; }
+        .btn-primary:hover { background: var(--brand-dark); }
+        .btn-primary:disabled { background: #cbd5e1; cursor: not-allowed; }
+        .btn-ghost { background: var(--brand-soft); color: var(--brand-dark); }
+        .btn-ghost:hover { background: #e0e7ff; }
+
+        .content { padding: 28px 30px 60px; max-width: 1200px; }
+
+        /* ---------------- Stat cards ---------------- */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 18px;
+            margin-bottom: 26px;
+        }
+
+        .stat {
+            background: var(--card);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+        }
+        .stat .ic {
+            float: right;
+            width: 44px; height: 44px;
+            border-radius: 12px;
+            display: grid; place-items: center;
+            font-size: 21px;
+        }
+        .stat .num { font-size: 30px; font-weight: 700; }
+        .stat .lbl { font-size: 13px; color: var(--muted); margin-top: 2px; }
+        .i-total { background: var(--brand-soft); }
+        .i-up { background: var(--green-soft); }
+        .i-seat { background: var(--amber-soft); }
+        .i-reg { background: #e0f2fe; }
+
+        /* ---------------- Panels ---------------- */
+        .panel {
+            background: var(--card);
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            padding: 22px;
+            margin-bottom: 22px;
+        }
+        .panel h3 { font-size: 15px; margin-bottom: 3px; }
+        .panel .sub { font-size: 12.5px; color: var(--muted); margin-bottom: 18px; }
+
+        .two-col { display: grid; grid-template-columns: 1.4fr 1fr; gap: 22px; align-items: start; }
+
+        /* ---- category breakdown ---- */
+        .bar-row { margin-bottom: 14px; }
+        .bar-row .bl {
+            display: flex; justify-content: space-between;
+            font-size: 13px; margin-bottom: 5px;
+        }
+        .bar-row .bl b { color: var(--muted); font-weight: 600; }
+        .track { height: 9px; background: #f1f5f9; border-radius: 999px; overflow: hidden; }
+        .track > i { display: block; height: 100%; border-radius: 999px; transition: width .4s; }
+
+        .u-item {
+            display: flex; align-items: center; gap: 12px;
+            padding: 11px 0; border-bottom: 1px solid #f1f5f9; font-size: 13.5px;
+        }
+        .u-item:last-child { border-bottom: none; }
+        .u-date {
+            background: var(--brand-soft); color: var(--brand-dark);
+            border-radius: 9px; text-align: center; padding: 6px 10px;
+            font-weight: 700; font-size: 12px; line-height: 1.2; min-width: 52px;
+        }
+        .u-date span { display: block; font-size: 16px; }
+        .u-item .u-meta { color: var(--muted); font-size: 12px; }
+
+        /* ---------------- Forms ---------------- */
+        label { display: block; font-size: 12.5px; font-weight: 600; color: var(--muted); margin: 12px 0 6px; }
+        input, select, textarea {
+            width: 100%; padding: 11px 13px; font-size: 14px;
+            border: 1px solid var(--border); border-radius: 10px;
+            background: #fff; color: var(--text); font-family: inherit;
+            transition: border .15s, box-shadow .15s;
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none; border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-soft);
+        }
+        input.invalid, select.invalid { border-color: var(--red); box-shadow: 0 0 0 3px var(--red-soft); }
+        .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        .field-err { color: var(--red); font-size: 11.5px; margin-top: 5px; min-height: 14px; }
+        .form-wrap { max-width: 620px; }
+
+        .alert {
+            padding: 11px 14px; border-radius: 10px; font-size: 13px;
+            margin-top: 16px; display: flex; gap: 8px; align-items: center;
+        }
+        .alert-err { background: var(--red-soft); color: var(--red); }
+
+        /* ---------------- Toolbar ---------------- */
+        .toolbar { display: flex; gap: 12px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
+        .toolbar input { flex: 1; min-width: 180px; }
+        .toolbar select { width: auto; min-width: 150px; }
+
+        .chip-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 22px; }
+        .chip {
+            padding: 6px 15px; font-size: 13px; border-radius: 999px;
+            background: #eef1f6; color: var(--muted); border: 1px solid transparent; cursor: pointer;
+        }
+        .chip.active { background: var(--brand); color: #fff; }
+
+        /* ---------------- Event cards ---------------- */
+        .events { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+        .event {
+            border: 1px solid var(--border); border-radius: 15px; padding: 18px;
+            background: #fff; display: flex; flex-direction: column; gap: 11px;
+            box-shadow: var(--shadow); transition: box-shadow .15s, transform .15s;
+        }
+        .event:hover { box-shadow: 0 12px 30px rgba(15, 23, 42, .1); transform: translateY(-3px); }
+        .event .top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+        .event .title { font-size: 15.5px; font-weight: 700; }
+        .tag { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 999px; white-space: nowrap; }
+        .t-Technical { background: var(--brand-soft); color: var(--brand-dark); }
+        .t-Cultural { background: #fce7f3; color: #be185d; }
+        .t-Sports { background: var(--green-soft); color: var(--green); }
+        .t-Workshop { background: var(--amber-soft); color: var(--amber); }
+        .t-Seminar { background: #e0f2fe; color: #0369a1; }
+        .meta { font-size: 13px; color: var(--muted); display: flex; flex-direction: column; gap: 4px; }
+        .meta span { display: flex; gap: 7px; align-items: center; }
+        .seatbar { height: 7px; border-radius: 999px; background: #f1f5f9; overflow: hidden; }
+        .seatbar > i { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--brand), var(--gold)); transition: width .3s; }
+        .seat-info { font-size: 12px; color: var(--muted); display: flex; justify-content: space-between; }
+        .full { color: var(--red); font-weight: 700; }
+        .actions { display: flex; gap: 8px; margin-top: 4px; }
+        .btn-reg { flex: 1; padding: 9px; background: var(--green); color: #fff; font-size: 13px; border: none; border-radius: 9px; cursor: pointer; font-weight: 600; }
+        .btn-reg:hover { background: #15803d; }
+        .btn-reg:disabled { background: #cbd5e1; cursor: not-allowed; }
+        .btn-del { padding: 9px 12px; background: var(--red-soft); color: var(--red); font-size: 13px; border: none; border-radius: 9px; cursor: pointer; font-weight: 600; }
+        .btn-del:hover { background: #fecaca; }
+
+        /* ---------------- Empty state ---------------- */
+        .empty { text-align: center; padding: 60px 20px; color: var(--muted); }
+        .empty .big { font-size: 46px; margin-bottom: 12px; }
+        .empty h4 { font-size: 16px; color: var(--text); margin-bottom: 4px; }
+
+        /* ---------------- Table (attendees) ---------------- */
+        .table-wrap { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+        thead th {
+            text-align: left; padding: 12px 14px; color: var(--muted);
+            font-size: 12px; text-transform: uppercase; letter-spacing: .04em;
+            border-bottom: 2px solid var(--border);
+        }
+        tbody td { padding: 12px 14px; border-bottom: 1px solid #f1f5f9; }
+        tbody tr:hover { background: #fafbfe; }
+        .avatar {
+            width: 30px; height: 30px; border-radius: 50%;
+            background: var(--brand-soft); color: var(--brand-dark);
+            display: inline-grid; place-items: center; font-weight: 700; font-size: 13px; margin-right: 8px;
+            vertical-align: middle;
+        }
+
+        /* ---------------- Modal ---------------- */
+        .overlay {
+            position: fixed; inset: 0; background: rgba(15, 23, 42, .55);
+            backdrop-filter: blur(3px); display: grid; place-items: center;
+            padding: 20px; z-index: 50; animation: fade .15s ease;
+        }
+        @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+        .modal {
+            background: var(--card); border-radius: 18px; width: 100%; max-width: 470px;
+            max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(15, 23, 42, .3);
+            animation: pop .18s ease;
+        }
+        @keyframes pop { from { transform: translateY(12px) scale(.97); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
+        .modal-head {
+            padding: 20px 22px; background: linear-gradient(120deg, var(--brand-dark), var(--brand));
+            color: #fff; border-radius: 18px 18px 0 0; display: flex;
+            justify-content: space-between; align-items: flex-start; gap: 12px;
+        }
+        .modal-head h3 { font-size: 17px; }
+        .modal-head .ev-name { font-size: 13px; opacity: .9; margin-top: 3px; }
+        .x-btn {
+            background: rgba(255, 255, 255, .2); color: #fff; width: 30px; height: 30px;
+            border-radius: 8px; font-size: 17px; line-height: 1; border: none; cursor: pointer;
+        }
+        .x-btn:hover { background: rgba(255, 255, 255, .32); }
+        .modal-body { padding: 22px; }
+        .seat-note { font-size: 12.5px; color: var(--muted); background: var(--brand-soft); padding: 8px 12px; border-radius: 9px; }
+        .reg-list { margin-top: 20px; border-top: 1px solid var(--border); padding-top: 16px; }
+        .reg-list h4 { font-size: 12px; color: var(--muted); margin-bottom: 10px; text-transform: uppercase; letter-spacing: .04em; }
+        .reg-item { display: flex; align-items: center; gap: 10px; padding: 8px 0; font-size: 13.5px; border-bottom: 1px solid #f1f5f9; }
+        .reg-item:last-child { border-bottom: none; }
+        .reg-item .roll { color: var(--muted); font-size: 12px; margin-left: auto; }
+        .no-reg { font-size: 13px; color: var(--muted); font-style: italic; }
+
+        /* ---------------- Toast ---------------- */
+        .toast {
+            position: fixed; bottom: 26px; right: 26px; z-index: 80;
+            background: #0f172a; color: #fff; padding: 13px 18px; border-radius: 11px;
+            font-size: 13.5px; box-shadow: 0 10px 30px rgba(0,0,0,.25);
+            display: flex; gap: 9px; align-items: center; animation: slideup .25s ease;
+        }
+        @keyframes slideup { from { transform: translateY(16px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .toast.ok { background: #14532d; }
+        .toast.warn { background: #7c2d12; }
+
+        /* ---------------- Responsive ---------------- */
+        @media (max-width: 1000px) {
+            .events { grid-template-columns: repeat(2, 1fr); }
+            .two-col { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 760px) {
+            :root { --sidebar: 0px; }
+
+            /* sidebar becomes a slide-in drawer */
+            .sidebar {
+                width: 265px;
+                transform: translateX(-100%);
+                box-shadow: 0 0 40px rgba(0, 0, 0, .3);
+            }
+            .sidebar.open { transform: translateX(0); }
+
+            .nav-backdrop {
+                display: block;
+                position: fixed; inset: 0;
+                background: rgba(15, 23, 42, .5);
+                z-index: 30;
+                animation: fade .2s ease;
+            }
+            .side-close {
+                display: grid; place-items: center;
+                margin-left: auto;
+                background: rgba(255, 255, 255, .16); color: #fff;
+                border: none; width: 30px; height: 30px; border-radius: 8px;
+                font-size: 15px; cursor: pointer; flex-shrink: 0;
+            }
+            .hamburger { display: block; }
+
+            .btn-full { display: none; }
+            .btn-short { display: inline; }
+
+            .stats { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+            .stat .num { font-size: 24px; }
+            .events { grid-template-columns: 1fr; }
+            .content { padding: 20px 16px 50px; }
+            .topbar { padding: 14px 16px; }
+            .topbar h2 { font-size: 17px; }
+            .row2 { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 400px) {
+            .stats { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+
+<body ng-controller="AppCtrl">
+
+    <!-- ==================== MOBILE BACKDROP ==================== -->
+    <div class="nav-backdrop" ng-if="menuOpen" ng-click="menuOpen=false"></div>
+
+    <!-- ==================== SIDEBAR ==================== -->
+    <aside class="sidebar" ng-class="{open: menuOpen}">
+        <div class="side-brand">
+            <div class="logo">🎓</div>
+            <div>
+                <h1>Parul University</h1>
+                <p>Event Management · Vadodara</p>
+            </div>
+            <button class="side-close" ng-click="menuOpen=false">✕</button>
+        </div>
+
+        <div class="nav-item" ng-class="{active: view=='dashboard'}" ng-click="setView('dashboard')">
+            <span class="ico">📊</span> Dashboard
+        </div>
+        <div class="nav-item" ng-class="{active: view=='events'}" ng-click="setView('events')">
+            <span class="ico">📅</span> Events
+            <span class="nav-badge">{{events.length}}</span>
+        </div>
+        <div class="nav-item" ng-class="{active: view=='create'}" ng-click="setView('create')">
+            <span class="ico">➕</span> Create Event
+        </div>
+        <div class="nav-item" ng-class="{active: view=='attendees'}" ng-click="setView('attendees')">
+            <span class="ico">🧑‍🎓</span> Attendees
+            <span class="nav-badge">{{totalRegistered()}}</span>
+        </div>
+
+        <div class="side-foot">
+            💾 Auto-saved in this browser<br>
+            © 2026 Parul University, Vadodara<br>
+            <a href="" ng-click="resetData(); $event.preventDefault()" class="reset-link">↺ Reset to sample data</a>
+        </div>
+    </aside>
+
+    <!-- ==================== MAIN ==================== -->
+    <div class="main">
+
+        <!-- Topbar -->
+        <div class="topbar">
+            <div class="topbar-left">
+                <button class="hamburger" ng-click="menuOpen=true" aria-label="Menu">☰</button>
+                <div>
+                    <h2>{{pageTitle()}}</h2>
+                    <div class="crumb">Parul University / {{pageTitle()}}</div>
+                </div>
+            </div>
+            <button class="btn btn-primary" ng-if="view!='create'" ng-click="setView('create')">
+                <span class="btn-full">＋ New Event</span><span class="btn-short">＋</span>
+            </button>
+        </div>
+
+        <div class="content">
+
+            <!-- ============ DASHBOARD ============ -->
+            <div ng-if="view=='dashboard'">
+
+                <div class="stats">
+                    <div class="stat"><div class="ic i-total">📅</div><div class="num">{{events.length}}</div><div class="lbl">Total Events</div></div>
+                    <div class="stat"><div class="ic i-up">🚀</div><div class="num">{{upcomingCount()}}</div><div class="lbl">Upcoming</div></div>
+                    <div class="stat"><div class="ic i-reg">🧑‍🎓</div><div class="num">{{totalRegistered()}}</div><div class="lbl">Registrations</div></div>
+                    <div class="stat"><div class="ic i-seat">🪑</div><div class="num">{{seatsLeft()}}</div><div class="lbl">Seats Available</div></div>
+                </div>
+
+                <div class="two-col">
+                    <!-- Category breakdown -->
+                    <div class="panel">
+                        <h3>Events by Category</h3>
+                        <p class="sub">Distribution across {{events.length}} event(s)</p>
+
+                        <div class="bar-row" ng-repeat="c in categoryStatsData">
+                            <div class="bl"><span>{{c.name}}</span><b>{{c.count}}</b></div>
+                            <div class="track"><i ng-style="{width: c.pct + '%', background: c.color}"></i></div>
+                        </div>
+                        <div class="no-reg" ng-if="events.length==0">No events yet — create one to see stats.</div>
+                    </div>
+
+                    <!-- Upcoming events -->
+                    <div class="panel">
+                        <h3>Upcoming Events</h3>
+                        <p class="sub">Next events on the calendar</p>
+
+                        <div class="u-item" ng-repeat="ev in upcomingListData">
+                            <div class="u-date">
+                                <span>{{ev.date | date:'dd'}}</span>{{ev.date | date:'MMM'}}
+                            </div>
+                            <div>
+                                <div>{{ev.title}}</div>
+                                <div class="u-meta">📍 {{ev.venue}} · {{ev.registered}}/{{ev.seats}} seats</div>
+                            </div>
+                        </div>
+                        <div class="no-reg" ng-if="upcomingListData.length==0">No upcoming events.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============ EVENTS ============ -->
+            <div ng-if="view=='events'">
+
+                <div class="panel">
+                    <div class="toolbar">
+                        <input type="text" placeholder="🔍 Search by name, venue or organizer…" ng-model="filters.search">
+                        <select ng-model="filters.sortBy">
+                            <option value="date">Sort: Date</option>
+                            <option value="title">Sort: Name</option>
+                            <option value="seatsFree">Sort: Seats free</option>
+                        </select>
+                    </div>
+
+                    <div class="chip-row">
+                        <span class="chip" ng-class="{active: filters.cat==''}" ng-click="setCat('')">All</span>
+                        <span class="chip" ng-class="{active: filters.cat==c}" ng-repeat="c in categories" ng-click="setCat(c)">{{c}}</span>
+                    </div>
+
+                    <div class="events">
+                        <div class="event"
+                             ng-repeat="ev in filtered = (events | filter:searchFilter | filter:catMatch | orderBy:sortKey())">
+                            <div class="top">
+                                <div class="title">{{ev.title}}</div>
+                                <span class="tag t-{{ev.category}}">{{ev.category}}</span>
+                            </div>
+                            <div class="meta">
+                                <span>📆 {{ev.date | date:'EEE, dd MMM yyyy'}}</span>
+                                <span>📍 {{ev.venue}}</span>
+                                <span>🏛️ {{ev.organizer}}</span>
+                            </div>
+                            <div class="seatbar"><i ng-style="{width: seatPct(ev) + '%'}"></i></div>
+                            <div class="seat-info">
+                                <span>{{ev.registered}} / {{ev.seats}} registered</span>
+                                <span ng-if="ev.registered < ev.seats">{{ev.seats - ev.registered}} left</span>
+                                <span ng-if="ev.registered >= ev.seats" class="full">HOUSE FULL</span>
+                            </div>
+                            <div class="actions">
+                                <button class="btn-reg" ng-click="openRegister(ev)" ng-disabled="ev.registered >= ev.seats">
+                                    {{ ev.registered >= ev.seats ? 'Full' : '＋ Register' }}
+                                </button>
+                                <button class="btn-del" ng-click="removeEvent(ev)">🗑 Delete</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="empty" ng-if="filtered.length == 0">
+                        <div class="big">🔎</div>
+                        <h4>No events found</h4>
+                        <div ng-if="events.length > 0">Try a different search or filter.</div>
+                        <div ng-if="events.length == 0">Create your first event to get started.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============ CREATE ============ -->
+            <div ng-if="view=='create'">
+                <div class="panel form-wrap">
+                    <h3>➕ Create New Event</h3>
+                    <p class="sub">Fill in the details to publish an event to the campus calendar</p>
+
+                    <label>Event Name *</label>
+                    <input type="text" placeholder="e.g. Hackathon 2026" ng-model="form.title"
+                           ng-class="{invalid: fieldErr.title}">
+                    <div class="field-err">{{fieldErr.title}}</div>
+
+                    <div class="row2">
+                        <div>
+                            <label>Category *</label>
+                            <select ng-model="form.category">
+                                <option ng-repeat="c in categories" value="{{c}}">{{c}}</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>Total Seats *</label>
+                            <input type="number" min="1" placeholder="100" ng-model="form.seats"
+                                   ng-class="{invalid: fieldErr.seats}">
+                            <div class="field-err">{{fieldErr.seats}}</div>
+                        </div>
+                    </div>
+
+                    <label>Date *</label>
+                    <input type="date" ng-model="form.date" ng-class="{invalid: fieldErr.date}">
+                    <div class="field-err">{{fieldErr.date}}</div>
+
+                    <label>Venue *</label>
+                    <input type="text" placeholder="e.g. Main Auditorium" ng-model="form.venue"
+                           ng-class="{invalid: fieldErr.venue}">
+                    <div class="field-err">{{fieldErr.venue}}</div>
+
+                    <label>Organizer / Department *</label>
+                    <input type="text" placeholder="e.g. CSE Department" ng-model="form.organizer"
+                           ng-class="{invalid: fieldErr.organizer}">
+                    <div class="field-err">{{fieldErr.organizer}}</div>
+
+                    <div style="display:flex; gap:10px; margin-top:18px;">
+                        <button class="btn btn-primary" ng-click="addEvent()">Publish Event</button>
+                        <button class="btn btn-ghost" ng-click="resetForm()">Clear</button>
+                    </div>
+
+                    <div class="alert alert-err" ng-if="formError">⚠ {{formError}}</div>
+                </div>
+            </div>
+
+            <!-- ============ ATTENDEES ============ -->
+            <div ng-if="view=='attendees'">
+                <div class="panel">
+                    <h3>🧑‍🎓 All Registrations</h3>
+                    <p class="sub">{{totalRegistered()}} student registration(s) across all events</p>
+
+                    <div class="toolbar">
+                        <input type="text" placeholder="🔍 Search student, roll no. or event…" ng-model="attSearch">
+                    </div>
+
+                    <div class="table-wrap" ng-if="attendeesData.length > 0">
+                        <table>
+                            <thead>
+                                <tr><th>Student</th><th>Roll No.</th><th>Email</th><th>Event</th><th>Category</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr ng-repeat="a in attendeesData | filter:attSearch">
+                                    <td><span class="avatar">{{a.name.charAt(0).toUpperCase()}}</span>{{a.name}}</td>
+                                    <td>{{a.roll}}</td>
+                                    <td>{{a.email}}</td>
+                                    <td>{{a.event}}</td>
+                                    <td><span class="tag t-{{a.category}}">{{a.category}}</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="empty" ng-if="attendeesData.length == 0">
+                        <div class="big">🗒️</div>
+                        <h4>No registrations yet</h4>
+                        <div>Register students from the Events page to see them here.</div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ==================== REGISTRATION MODAL ==================== -->
+    <div class="overlay" ng-if="modal.open">
+        <div class="modal">
+            <div class="modal-head">
+                <div>
+                    <h3>🎟️ Register for Event</h3>
+                    <div class="ev-name">{{modal.event.title}}</div>
+                </div>
+                <button class="x-btn" ng-click="closeModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="seat-note">🪑 {{modal.event.seats - modal.event.registered}} of {{modal.event.seats}} seats available</div>
+
+                <label>Full Name *</label>
+                <input type="text" placeholder="e.g. Aarav Sharma" ng-model="reg.name" ng-class="{invalid: regErr.name}">
+                <div class="field-err">{{regErr.name}}</div>
+
+                <div class="row2">
+                    <div>
+                        <label>Roll Number *</label>
+                        <input type="text" placeholder="e.g. 21CSE045" ng-model="reg.roll" ng-class="{invalid: regErr.roll}">
+                        <div class="field-err">{{regErr.roll}}</div>
+                    </div>
+                    <div>
+                        <label>Email *</label>
+                        <input type="text" placeholder="student@college.edu" ng-model="reg.email" ng-class="{invalid: regErr.email}">
+                        <div class="field-err">{{regErr.email}}</div>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary" style="width:100%; margin-top:16px;" ng-click="submitRegister()">✔ Confirm Registration</button>
+                <div class="alert alert-err" ng-if="modal.error">⚠ {{modal.error}}</div>
+
+                <div class="reg-list">
+                    <h4>Registered Students ({{modal.event.registrants.length}})</h4>
+                    <div class="reg-item" ng-repeat="s in modal.event.registrants">
+                        <span class="avatar">{{s.name.charAt(0).toUpperCase()}}</span>
+                        <span>{{s.name}}</span>
+                        <span class="roll">{{s.roll}}</span>
+                    </div>
+                    <div class="no-reg" ng-if="modal.event.registrants.length == 0">No students registered yet — be the first!</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== TOAST ==================== -->
+    <div class="toast" ng-class="toast.type" ng-if="toast.show">
+        <span>{{toast.icon}}</span> {{toast.msg}}
+    </div>
+
+    <!-- ==================== APP LOGIC ==================== -->
+    <script>
+        var app = angular.module("eventApp", []);
+
+        app.controller("AppCtrl", function ($scope, $timeout) {
+
+            var STORAGE_KEY = "cems.events.v2";
+
+            $scope.categories = ["Technical", "Cultural", "Sports", "Workshop", "Seminar"];
+            var CAT_COLORS = {
+                Technical: "#a83a56", Cultural: "#cba43a", Sports: "#16a34a",
+                Workshop: "#d97706", Seminar: "#0ea5e9"
+            };
+            var TODAY = "2026-07-18";
+
+            /* -------- default seed data (realistic sample; counts match registrants) -------- */
+            var seedEvents = [
+                {
+                    id: 1, title: "AI & ML Hackathon", category: "Technical", date: "2026-08-12",
+                    venue: "Innovation Lab", organizer: "CSE Department", seats: 50,
+                    registrants: [
+                        { name: "Aarav Sharma", roll: "21CSE045", email: "aarav.sharma@paruluniversity.ac.in" },
+                        { name: "Priya Patel", roll: "21CSE102", email: "priya.patel@paruluniversity.ac.in" },
+                        { name: "Rohan Mehta", roll: "22CSE011", email: "rohan.mehta@paruluniversity.ac.in" },
+                        { name: "Sneha Desai", roll: "21CSE078", email: "sneha.desai@paruluniversity.ac.in" },
+                        { name: "Karan Joshi", roll: "22CSE056", email: "karan.joshi@paruluniversity.ac.in" }
+                    ]
+                },
+                {
+                    id: 2, title: "Web Dev with AngularJS", category: "Workshop", date: "2026-07-30",
+                    venue: "Seminar Hall B", organizer: "IT Club", seats: 40,
+                    registrants: [
+                        { name: "Ishaan Verma", roll: "22IT013", email: "ishaan.verma@paruluniversity.ac.in" },
+                        { name: "Ananya Iyer", roll: "22IT034", email: "ananya.iyer@paruluniversity.ac.in" },
+                        { name: "Vivek Nair", roll: "21IT090", email: "vivek.nair@paruluniversity.ac.in" }
+                    ]
+                },
+                {
+                    id: 3, title: "Annual Cultural Fest 'Rhythm'", category: "Cultural", date: "2026-09-05",
+                    venue: "Open Air Theatre", organizer: "Cultural Committee", seats: 80,
+                    registrants: [
+                        { name: "Meera Shah", roll: "21BBA020", email: "meera.shah@paruluniversity.ac.in" },
+                        { name: "Aditya Rana", roll: "22MEC005", email: "aditya.rana@paruluniversity.ac.in" },
+                        { name: "Diya Kapoor", roll: "23BCA045", email: "diya.kapoor@paruluniversity.ac.in" },
+                        { name: "Nikhil Chauhan", roll: "21CIV030", email: "nikhil.chauhan@paruluniversity.ac.in" },
+                        { name: "Riya Singh", roll: "22BPH012", email: "riya.singh@paruluniversity.ac.in" },
+                        { name: "Arjun Pillai", roll: "21EEE008", email: "arjun.pillai@paruluniversity.ac.in" }
+                    ]
+                },
+                {
+                    id: 4, title: "Inter-College Cricket Cup", category: "Sports", date: "2026-08-28",
+                    venue: "Main Ground", organizer: "Sports Cell", seats: 30,
+                    registrants: [
+                        { name: "Rahul Yadav", roll: "21MEC022", email: "rahul.yadav@paruluniversity.ac.in" },
+                        { name: "Sameer Khan", roll: "22CIV017", email: "sameer.khan@paruluniversity.ac.in" },
+                        { name: "Deepak Solanki", roll: "21MEC044", email: "deepak.solanki@paruluniversity.ac.in" },
+                        { name: "Harsh Trivedi", roll: "22CSE088", email: "harsh.trivedi@paruluniversity.ac.in" }
+                    ]
+                },
+                {
+                    id: 5, title: "Career Guidance Seminar", category: "Seminar", date: "2026-08-18",
+                    venue: "Auditorium", organizer: "Placement Cell", seats: 60,
+                    registrants: [
+                        { name: "Pooja Reddy", roll: "21CSE060", email: "pooja.reddy@paruluniversity.ac.in" },
+                        { name: "Manish Gupta", roll: "22IT050", email: "manish.gupta@paruluniversity.ac.in" },
+                        { name: "Tanvi Bhatt", roll: "21BBA077", email: "tanvi.bhatt@paruluniversity.ac.in" },
+                        { name: "Yash Parmar", roll: "22BCA019", email: "yash.parmar@paruluniversity.ac.in" },
+                        { name: "Neha Rathod", roll: "21BPH005", email: "neha.rathod@paruluniversity.ac.in" }
+                    ]
+                }
+            ].map(function (e) { e.registered = e.registrants.length; return e; });
+
+            /* -------- safe load from localStorage -------- */
+            function loadEvents() {
+                try {
+                    var saved = localStorage.getItem(STORAGE_KEY);
+                    if (saved) {
+                        var parsed = JSON.parse(saved);
+                        if (Array.isArray(parsed)) return parsed;
+                    }
+                } catch (e) {
+                    console.warn("Could not read saved events, using defaults:", e);
+                }
+                return angular.copy(seedEvents);
+            }
+
+            $scope.events = loadEvents();
+
+            /* -------- normalize (back-compat / guard against bad data) -------- */
+            $scope.events.forEach(function (e) {
+                if (!angular.isArray(e.registrants)) e.registrants = [];
+                if (typeof e.registered !== "number" || e.registered < 0) e.registered = e.registrants.length;
+                if (typeof e.seats !== "number" || e.seats < 1) e.seats = 1;
+            });
+
+            /* -------- derived data (recomputed only when events change) -------- */
+            /* IMPORTANT: never bind ng-repeat to a function that returns a fresh
+               array each call — it causes an infinite $digest loop. We cache instead. */
+            $scope.categoryStatsData = [];
+            $scope.upcomingListData = [];
+            $scope.attendeesData = [];
+
+            function recompute() {
+                var evs = $scope.events;
+                var total = evs.length || 1;
+
+                $scope.categoryStatsData = $scope.categories.map(function (c) {
+                    var count = evs.filter(function (e) { return e.category === c; }).length;
+                    return { name: c, count: count, pct: Math.round(count / total * 100), color: CAT_COLORS[c] };
+                }).filter(function (c) { return c.count > 0; });
+
+                $scope.upcomingListData = evs
+                    .filter(function (e) { return e.date >= TODAY; })
+                    .sort(function (a, b) { return a.date < b.date ? -1 : 1; })
+                    .slice(0, 5);
+
+                var rows = [];
+                evs.forEach(function (ev) {
+                    (ev.registrants || []).forEach(function (s) {
+                        rows.push({ name: s.name, roll: s.roll, email: s.email, event: ev.title, category: ev.category });
+                    });
+                });
+                $scope.attendeesData = rows;
+            }
+
+            /* -------- safe save + recompute (deep watch) -------- */
+            $scope.$watch("events", function (list) {
+                recompute();
+                try {
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+                } catch (e) {
+                    console.warn("Could not save events:", e);
+                    showToast("Storage full — changes may not be saved", "warn", "⚠");
+                }
+            }, true);
+
+            /* ================= NAVIGATION ================= */
+            $scope.view = "dashboard";
+            $scope.menuOpen = false;
+            $scope.setView = function (v) { $scope.view = v; $scope.menuOpen = false; };
+
+            /* restore the original sample data (also clears anything saved in this browser) */
+            $scope.resetData = function () {
+                if (window.confirm("Reset all events back to the sample data? This will erase your changes in this browser.")) {
+                    $scope.events = angular.copy(seedEvents);
+                    $scope.menuOpen = false;
+                    showToast("Sample data restored", "ok", "↺");
+                }
+            };
+            $scope.pageTitle = function () {
+                return { dashboard: "Dashboard", events: "Events", create: "Create Event", attendees: "Attendees" }[$scope.view] || "Dashboard";
+            };
+
+            /* ================= TOAST ================= */
+            $scope.toast = { show: false };
+            function showToast(msg, type, icon) {
+                $scope.toast = { show: true, msg: msg, type: type || "ok", icon: icon || "✔" };
+                $timeout(function () { $scope.toast.show = false; }, 2600);
+            }
+
+            /* ================= CREATE EVENT ================= */
+            $scope.form = blankForm();
+            $scope.fieldErr = {};
+            $scope.formError = "";
+            $scope.submitted = false;   // only show errors after first submit attempt
+
+            function blankForm() {
+                return { title: "", category: "Technical", date: "", seats: "", venue: "", organizer: "" };
+            }
+
+            /* validate the form and return an errors object */
+            function validateForm() {
+                var f = $scope.form;
+                var errs = {};
+
+                if (!f.title || !f.title.trim()) errs.title = "Event name is required.";
+                if (!f.date) errs.date = "Please pick a date.";
+                else if (f.date < TODAY) errs.date = "Date is in the past.";
+                if (!f.venue || !f.venue.trim()) errs.venue = "Venue is required.";
+                if (!f.organizer || !f.organizer.trim()) errs.organizer = "Organizer is required.";
+
+                var seats = parseInt(f.seats, 10);
+                if (!f.seats && f.seats !== 0) errs.seats = "Seats required.";
+                else if (isNaN(seats) || seats < 1) errs.seats = "Must be at least 1.";
+                else if (seats > 100000) errs.seats = "That's too many seats.";
+
+                return errs;
+            }
+
+            /* re-validate live as the user types — but only once they've tried to submit */
+            $scope.$watchCollection("form", function () {
+                if (!$scope.submitted) return;
+                $scope.fieldErr = validateForm();
+                if (Object.keys($scope.fieldErr).length === 0) $scope.formError = "";
+            });
+
+            $scope.resetForm = function () {
+                $scope.form = blankForm();
+                $scope.fieldErr = {};
+                $scope.formError = "";
+                $scope.submitted = false;
+            };
+
+            $scope.addEvent = function () {
+                var f = $scope.form;
+                $scope.submitted = true;
+
+                var errs = validateForm();
+                $scope.fieldErr = errs;
+
+                if (Object.keys(errs).length > 0) {
+                    $scope.formError = "Please fix the highlighted fields.";
+                    return;
+                }
+
+                var seats = parseInt(f.seats, 10);
+
+                $scope.events.push({
+                    id: Date.now(),
+                    title: f.title.trim(),
+                    category: f.category,
+                    date: f.date,
+                    venue: f.venue.trim(),
+                    organizer: f.organizer.trim(),
+                    seats: seats,
+                    registered: 0,
+                    registrants: []
+                });
+
+                $scope.resetForm();
+                showToast("Event published successfully!", "ok", "🎉");
+                $scope.setView("events");
+            };
+
+            /* ================= DELETE ================= */
+            $scope.removeEvent = function (ev) {
+                if (window.confirm('Delete "' + ev.title + '"? This cannot be undone.')) {
+                    $scope.events = $scope.events.filter(function (e) { return e.id !== ev.id; });
+                    showToast("Event deleted", "warn", "🗑");
+                }
+            };
+
+            /* ================= REGISTRATION MODAL ================= */
+            $scope.modal = { open: false, event: null, error: "" };
+            $scope.reg = { name: "", roll: "", email: "" };
+            $scope.regErr = {};
+            $scope.regSubmitted = false;
+
+            function validateReg() {
+                var r = $scope.reg;
+                var errs = {};
+                var emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+                if (!r.name || !r.name.trim()) errs.name = "Name is required.";
+                if (!r.roll || !r.roll.trim()) errs.roll = "Roll number is required.";
+                if (!r.email || !r.email.trim()) errs.email = "Email is required.";
+                else if (!emailRe.test(r.email.trim())) errs.email = "Enter a valid email.";
+
+                return errs;
+            }
+
+            /* live-clear registration errors as the user types (after first attempt) */
+            $scope.$watchCollection("reg", function () {
+                if (!$scope.regSubmitted) return;
+                $scope.regErr = validateReg();
+                if (Object.keys($scope.regErr).length === 0) $scope.modal.error = "";
+            });
+
+            $scope.openRegister = function (ev) {
+                if (!angular.isArray(ev.registrants)) ev.registrants = [];
+                $scope.reg = { name: "", roll: "", email: "" };
+                $scope.regErr = {};
+                $scope.regSubmitted = false;
+                $scope.modal = { open: true, event: ev, error: "" };
+            };
+
+            $scope.closeModal = function () {
+                $scope.modal = { open: false, event: null, error: "" };
+            };
+
+            $scope.submitRegister = function () {
+                var ev = $scope.modal.event;
+                var r = $scope.reg;
+                $scope.regSubmitted = true;
+
+                var errs = validateReg();
+                $scope.regErr = errs;
+                if (Object.keys(errs).length > 0) { $scope.modal.error = "Please fix the highlighted fields."; return; }
+
+                if (ev.registered >= ev.seats) { $scope.modal.error = "Sorry, this event is now full."; return; }
+
+                var dup = ev.registrants.some(function (s) {
+                    return s.roll.toLowerCase() === r.roll.trim().toLowerCase();
+                });
+                if (dup) { $scope.modal.error = "This roll number is already registered."; return; }
+
+                ev.registrants.push({ name: r.name.trim(), roll: r.roll.trim(), email: r.email.trim() });
+                ev.registered++;
+                $scope.reg = { name: "", roll: "", email: "" };
+                $scope.regErr = {};
+                $scope.regSubmitted = false;   // reset so the cleared form doesn't re-flag errors
+                $scope.modal.error = "";
+                showToast(r.name.trim() + " registered!", "ok", "✅");
+            };
+
+            /* ================= EVENTS: filters / sort ================= */
+            /* Filter/sort state lives in an OBJECT (the "dot rule"). Because the Events view
+               is inside ng-if (a child scope), primitive ng-models like ng-model="search"
+               would be shadowed on that child scope and never reach the controller. An object
+               is shared by reference, so ng-model="filters.search" updates the same object the
+               searchFilter/catMatch/sortKey functions read. */
+            $scope.filters = { search: "", cat: "", sortBy: "date" };
+
+            $scope.setCat = function (c) { $scope.filters.cat = c; };
+
+            $scope.searchFilter = function (ev) {
+                var q = ($scope.filters.search || "").toLowerCase();
+                return !q ||
+                    ev.title.toLowerCase().indexOf(q) > -1 ||
+                    ev.venue.toLowerCase().indexOf(q) > -1 ||
+                    ev.organizer.toLowerCase().indexOf(q) > -1;
+            };
+            $scope.catMatch = function (ev) { return !$scope.filters.cat || ev.category === $scope.filters.cat; };
+            $scope.sortKey = function () {
+                if ($scope.filters.sortBy === "title") return "title";
+                if ($scope.filters.sortBy === "seatsFree") return function (ev) { return -(ev.seats - ev.registered); };
+                return "date";
+            };
+            $scope.seatPct = function (ev) {
+                if (!ev.seats) return 0;
+                return Math.min(100, Math.round(ev.registered / ev.seats * 100));
+            };
+
+            /* ================= DASHBOARD stats ================= */
+            $scope.upcomingCount = function () {
+                return $scope.events.filter(function (e) { return e.date >= TODAY; }).length;
+            };
+            $scope.totalRegistered = function () {
+                return $scope.events.reduce(function (s, e) { return s + (e.registered || 0); }, 0);
+            };
+            $scope.seatsLeft = function () {
+                return $scope.events.reduce(function (s, e) { return s + Math.max(0, e.seats - e.registered); }, 0);
+            };
+            /* ================= ATTENDEES ================= */
+            $scope.attSearch = "";
+        });
+    </script>
+
+</body>
+</html>
