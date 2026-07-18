@@ -67,17 +67,17 @@
 ### Dashboard
 Live stats, an *Events by Category* breakdown, and upcoming events at a glance.
 
-![Dashboard](screenshots/Dashboard.png)
+![Dashboard](Dashboard.png)
 
 ### Events
 Browse events with search, category filters, sorting, and seat-availability bars.
 
-![Events](screenshots/Events.png)
+![Events](Events.png)
 
 ### Create Event
 Publish a new event with full form validation.
 
-![Create Event](screenshots/Registration.png)
+![Create Event](Registration.png)
 
 ---
 
